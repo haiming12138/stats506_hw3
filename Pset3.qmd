@@ -1,0 +1,13 @@
+---
+title: "STATS 506 Problem Set #3"
+author: "Haiming Li"
+format: 
+  html:
+    toc: true
+  pdf: default
+---
+## Vision
+
+## Sakila
+
+## US Records
