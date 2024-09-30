@@ -160,4 +160,9 @@ first_digit <- as.numeric(substring(apt_nbrs, 1, 1))
 hist(first_digit, main = 'First Digit Distribution', xlab = '', freq = FALSE)
 ```
 
+## Citaton & Link to GitHub
+* [Logistic Regression Positive Class in R](https://stackoverflow.com/questions/72121373/tidymodels-not-treating-first-factor-level-as-positive-class)
+* [Interpretation of LR coefficients](https://stats.oarc.ucla.edu/other/mult-pkg/faq/general/faq-how-do-i-interpret-odds-ratios-in-logistic-regression/)
+* [GitHub Repo of this Pset](https://github.com/haiming12138/stats506_hw3.git)
+
 
