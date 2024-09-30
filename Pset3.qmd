@@ -1,6 +1,6 @@
 ---
-title: "STATS 506 Problem Set #3"
-author: "Haiming Li"
+title: 'STATS 506 Problem Set #3'
+author: 'Haiming Li'
 format: 
   html:
     toc: true
@@ -25,7 +25,7 @@ age_groups <- c('10-19' ,'20-29', '30-39', '40-49',
 df$age_cat <- age_groups[floor(df$RIDAGEYR / 10)]
 res <- df %>% group_by(age_cat) %>% 
           summarise(proportion = round(100 * mean(VIQ220 == 1, na.rm=TRUE), 2))
-knitr::kable(res, 'simple', col.names = c("Age Group", "Proportion"))
+knitr::kable(res, 'simple', col.names = c('Age Group', 'Proportion'))
 ```
 c. Here are fitted models and their summary.
 ```{r 1c}
@@ -53,16 +53,16 @@ df_mod$RIDRETH1 <- as.factor(df_mod$RIDRETH1)
 
 # model fitting
 mod1 <- glm(VIQ220 ~ RIDAGEYR, data = df_mod, 
-            family = binomial(link = "logit"))
+            family = binomial(link = 'logit'))
 knitr::kable(summary_table(mod1))
 mod2 <- glm(VIQ220 ~ RIDAGEYR + RIDRETH1 + RIAGENDR, data = df_mod, 
-            family = binomial(link = "logit"))
+            family = binomial(link = 'logit'))
 knitr::kable(summary_table(mod2))
 mod3 <- glm(VIQ220 ~ RIDAGEYR + RIDRETH1 + RIAGENDR + INDFMPIR, data = df_mod, 
-            family = binomial(link = "logit"))
+            family = binomial(link = 'logit'))
 knitr::kable(summary_table(mod3))
 ```
-d. From previous part, we have the odds ratio for women is 0.5967415. This can be interpreted as the value of female odds divided by male odds. From the summary of model 3, the coefficient is significant, thus implying that female odds differs from male odds for being a glass wearer is statistically significant. Since the positive class of glm is the last level of the factor, 2 in this case, the positive class for the model is actually "not a glass wearer". Thus, we need to invert our interpretation. Having an odds ratio less than 1 from the model actually should imply that the odds of females wearing glasses/contacts for distance vision is higher than male.
+d. From previous part, we have the odds ratio for women is 0.5967415. This can be interpreted as the value of female odds divided by male odds. From the summary of model 3, the coefficient is significant, thus implying that female odds differs from male odds for being a glass wearer is statistically significant. Since the positive class of glm is the last level of the factor, 2 in this case, the positive class for the model is actually 'not a glass wearer'. Thus, we need to invert our interpretation. Having an odds ratio less than 1 from the model actually should imply that the odds of females wearing glasses/contacts for distance vision is higher than male.
 ```{r}
 summary(mod3)
 ```
@@ -74,7 +74,7 @@ prop.test(tab[,1], rowSums(tab))
 
 ## Sakila
 a. It appears that all movies are from 2006, which is the earliest release year from this database.
-```{r 2a, echo=TRUE, results='hide'}
+```{r 2a, echo=TRUE, results='hide', warning=FALSE}
 library(DBI)
 sakila <- dbConnect(RSQLite::SQLite(), './sakila_master.db')
 dbGetQuery(sakila,'
@@ -129,9 +129,35 @@ dbGetQuery(sakila, '
 ')
 ```
 
-
-
-
-
-
 ## US Records
+a. Here's the proportion of TLD with ``.com'
+```{r 3a}
+df <- read.csv('./us-500.csv')
+cat('Proportion of .com:', mean(grepl('\\.com$', df$email)))
+```
+b. Here's the proportion of email with at least one non alphanumeric character in them. Since it's possible to have ``.' in the username, we need to seperate the username and domain, then check each part separately.
+```{r 3b}
+emails <- strsplit(df$email, '@')
+usernames <- lapply(emails, '[[', 1)
+domains <- lapply(emails, '[[', 2)
+domains <- gsub('\\.[a-z]{3}', '', domains)
+mean(grepl('[^a-zA-Z0-9]+', usernames) | grepl('[^a-zA-Z0-9]+', domains))
+```
+c. Here's the top 5 area code. Notice that there is no ties in top 5, so I can directly use the top 5 element.
+```{r 3c}
+res <- table(c(substr(df$phone1, 1, 3), substr(df$phone2, 1, 3)))
+sort(res, decreasing=TRUE)[1:5]
+```
+d. Here's the frequency histogram of the apartment numbers.
+```{r 3d, fig.align='center'}
+apt_nbrs <- regmatches(df$address, regexpr('[0-9]+$', df$address))
+hist(log(as.numeric(apt_nbrs)), main = 'Frequency of Apartment Numbers', 
+     xlab = 'log(Apartment Number)')
+```
+e. The data appears to be synthetic, as the first digit does not have a decreasing trend.
+```{r 3e}
+first_digit <- as.numeric(substring(apt_nbrs, 1, 1))
+hist(first_digit, main = 'First Digit Distribution', xlab = '', freq = FALSE)
+```
+
+
