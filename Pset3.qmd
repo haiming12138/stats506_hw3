@@ -7,6 +7,76 @@ format:
   pdf: default
 ---
 ## Vision
+a. Read data and merge data
+```{r 1a}
+library(haven)
+vix <- read_xpt('./VIX_D.XPT')
+demo <- read_xpt('./DEMO_D.XPT')
+df <- merge(vix, demo, by='SEQN')
+cat('Sample size:', nrow(df))
+```
+b. The max age is 85, so there will only be 9 age brackets.
+```{r 1b, warning=FALSE, message=FALSE}
+library(dplyr)
+df <- subset(df, (VIQ220 == 1) | (VIQ220 == 2))
+df$VIQ220 <- ifelse(is.na(df$VIQ220), 0, df$VIQ220)
+age_groups <- c('10-19' ,'20-29', '30-39', '40-49',
+                '50-59', '60-69', '70-79', '80-89')
+df$age_cat <- age_groups[floor(df$RIDAGEYR / 10)]
+res <- df %>% group_by(age_cat) %>% 
+          summarise(proportion = round(100 * mean(VIQ220 == 1, na.rm=TRUE), 2))
+knitr::kable(res, 'simple', col.names = c("Age Group", "Proportion"))
+```
+c. Here are fitted models and their summary.
+```{r 1c}
+#' Create Summary Table for Logistic Regression
+#'
+#' @param model a fitted logistic regression model
+#' @return a table with required stats
+summary_table <- function(model) {
+  odds_ratios <- as.data.frame(t(exp(coef(model))))
+  res <- data.frame(
+  'Sample Size' = nobs(model),        
+  'Pseudo R2' = 1 - model$deviance / model$null.deviance,  
+  'AIC' = AIC(model) 
+  )
+  res <- cbind(odds_ratios, res)
+  return(t(res))
+}
+
+# data cleaning
+df_mod <- subset(df, select=c(VIQ220, RIAGENDR, RIDAGEYR, RIDRETH1, INDFMPIR))
+df_mod <- na.omit(df_mod)
+df_mod$VIQ220 <- as.factor(df_mod$VIQ220)
+df_mod$RIAGENDR <- as.factor(df_mod$RIAGENDR)
+df_mod$RIDRETH1 <- as.factor(df_mod$RIDRETH1)
+
+# model fitting
+mod1 <- glm(VIQ220 ~ RIDAGEYR, data = df_mod, 
+            family = binomial(link = "logit"))
+knitr::kable(summary_table(mod1))
+mod2 <- glm(VIQ220 ~ RIDAGEYR + RIDRETH1 + RIAGENDR, data = df_mod, 
+            family = binomial(link = "logit"))
+knitr::kable(summary_table(mod2))
+mod3 <- glm(VIQ220 ~ RIDAGEYR + RIDRETH1 + RIAGENDR + INDFMPIR, data = df_mod, 
+            family = binomial(link = "logit"))
+knitr::kable(summary_table(mod3))
+```
+d. From previous part, we have the odds ratio for women is 0.5967415. This can be interpreted as the value of female odds divided by male odds. From the summary of model 3, the coefficient is significant, thus implying that female odds differs from male odds for being a glass wearer is statistically significant. Since the positive class of glm is the last level of the factor, 2 in this case, the positive class for the model is actually "not a glass wearer". Thus, we need to invert our interpretation. Having an odds ratio less than 1 from the model actually should imply that the odds of females wearing glasses/contacts for distance vision is higher than male.
+```{r}
+summary(mod3)
+```
+As shown by the two sample proportion test, the p-value is extremely small. Thus, we can reject the null hypothesis and conclude that the proportion of wearers of glasses/contact lenses for distance vision differs between men and women. We can even say that male proportion is less than female proportion. (according to the fact that the confidence interval is below 0)
+```{r}
+tab <- table(df_mod$RIAGENDR, df_mod$VIQ220)
+prop.test(tab[,1], rowSums(tab))
+```
+```{r}
+levels(df_mod$VIQ220)
+```
+
+
+
 
 ## Sakila
 
