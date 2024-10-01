@@ -73,12 +73,16 @@ prop.test(tab[,1], rowSums(tab))
 ```
 
 ## Sakila
-a. It appears that the earliest release year is 2006.
+a. It appears that the earliest release year is 2006, and there're 1000 movies released that year.
 ```{r 2a, echo=TRUE, warning=FALSE}
 library(DBI)
 sakila <- dbConnect(RSQLite::SQLite(), './sakila_master.db')
 dbGetQuery(sakila,'
-  SELECT MIN(release_year) FROM film')
+  SELECT release_year, COUNT(*) AS count
+  FROM film
+  WHERE release_year = (SELECT MIN(release_year) FROM film)
+  GROUP BY release_year
+')
 ```
 b. Here's the R approach, note that the min value is unique.
 ```{r 2br}
